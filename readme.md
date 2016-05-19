@@ -17,11 +17,13 @@ Cassandra’s architecture is responsible for its ability to scale, perform, and
 
 In Cassandra, all nodes play an identical role; there is no concept of a master node, with all nodes communicating with each other equally. Cassandra’s built-for-scale architecture means that it is capable of handling large amounts of data and thousands of concurrent users or operations per second—​even across multiple data centers—​as easily as it can manage much smaller amounts of data and user traffic. Cassandra’s architecture also means that, unlike other master-slave or sharded systems, it has no single point of failure and therefore is capable of offering true continuous availability and uptime — simply add new nodes to an existing cluster without having to take it down.
 
-Note, Apache Cassandra aims for high availability and is therefor eventually consistent, contrary to a relational database, which aims for consistency but not for high availability, both are limitations put upon these systems by the [CAP Theorem](https://en.wikipedia.org/wiki/CAP_theorem) which states that it is impossible for a distributed system to simultaneously provide all three of the following guarantees:
+Note, Apache Cassandra aims for high availability and is therefor **eventually consistent**, contrary to a relational database, which aims for consistency but not for high availability, both are limitations put upon these systems by the [CAP Theorem](https://en.wikipedia.org/wiki/CAP_theorem) which states that it is impossible for a distributed system to simultaneously provide all three of the following guarantees:
 
 - __Consistency:__ (all nodes see the same data at the same time)
 - __Availability:__ (every request receives a response about whether it succeeded or failed)
 - __Partition tolerance:__ (the system continues to operate despite arbitrary partitioning due to network failures)
+
+According to [NoSQL - Your ultimate guide to the Non-Relational Universe](http://nosql-database.org/), Cassandra is a Wide Column Store / Column Families architected database that is a massively scalable, partitioned row store, masterless architecture, linear scale performance, no single points of failure, read/write support across multiple data centers & cloud availability zones. API / Query Method: CQL and Thrift, replication: peer-to-peer, written in: Java, Concurrency: tunable consistency, Misc: built-in data compression, MapReduce support, primary/secondary indexes, security features.
 
 ## Cassandra Architecture
 Cassandra's architecture is modeled in two ways:
