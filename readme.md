@@ -40,6 +40,9 @@ Cassandra's architecture is modeled in two ways:
 ## Consistency
 Okay, Cassandra is very cool as we can see of the feature above, but what about consistency eg. read after write? Well, for that Cassandra provides tunable consistency levels for read and write operations, which in practise means for a write and read operation, the number of nodes we wish to acknowledge the write or read operation, so for a certain operation on the cluster we can, per use case, define the required level of consistency which yes is cool.
 
+## Weaknesses of Cassandra
+Because cassandra has its strength in availabilty and partition tolerance (AP), it does not support transactions. It uses replication extensively to enable availability so that the data in the cluster might be momentarily inconsistent (although it is eventually consistent). It does not support relations so no joins, foreign keys or referential integrity. In addition, the range queries are not available Furthermore, the flexible schema might lead to problems with efficient searches.
+
 # Cassandra Query Language (CQL)
 Cassandra provides a SQL like language called [Cassandra Query Language v3 (CQL)](http://cassandra.apache.org/doc/cql3/CQL.html). CQL is the primary language for communicating with the Cassandra database by means of the cqlsh interactive terminal. 
 
