@@ -78,19 +78,20 @@ type | constants supported | description
 boolean | booleans | true or false|
 counter | integers | Counter column (64-bit signed value)
 blob | blobs | Arbitrary bytes (no validation)
+inet | strings | An IP address. It can be either 4 bytes long [IPv4](https://en.wikipedia.org/wiki/IPv4) or 16 bytes long [IPv6](https://en.wikipedia.org/wiki/IPv6). There is no inet constant, IP address should be inputed as strings
 tinyint | integers | 8-bit signed int
 smallint | integers | 16-bit signed int
-int | integers | 32-bit signed int
 decimal | integers, float | Variable-precision decimal
-float | integers, floats | 32-bit IEEE-754 floating point
-double | integers | 64-bit IEEE-754 floating point
+**int** | integers | 32-bit signed int
+**float** | integers, floats | 32-bit [IEEE-754](https://en.wikipedia.org/wiki/IEEE_754_revision) floating point
+**double** | integers | 64-bit [IEEE-754](https://en.wikipedia.org/wiki/IEEE_754_revision) floating point
+**timestamp** | integers, strings | A timestamp. Strings constant are allow to input timestamps as dates
+**timeuuid** | uuids | [Type 1](https://en.wikipedia.org/wiki/Universally_unique_identifier#Version_1_.28date-time_.26_MAC_address.29) [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier). This is generally used as a “conflict-free” timestamp.
+**uuid** | uuids | [Type 1](https://en.wikipedia.org/wiki/Universally_unique_identifier#Version_1_.28date-time_.26_MAC_address.29) or [Type 4](https://en.wikipedia.org/wiki/Universally_unique_identifier#Version_4_.28random.29) [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier)
+**text** | strings | UTF-8 encoded string note that text is an alias for varchar
+**varchar** | strings | UTF-8 encoded string 
 time | integers, strings | A time with nanosecond precision.
-timestamp | integers, strings | A timestamp. Strings constant are allow to input timestamps as dates
-timeuuid | uuids | Type 1 UUID. This is generally used as a “conflict-free” timestamp.
 date | integers, strings | A date (with no corresponding time value)
-uuid | uuids | Type 1 or type 4 UUID
-varchar | strings | UTF-8 encoded string
-text | strings | UTF-8 encoded string
 
 ## Keyspaces
 A cluster is a container for keyspaces. A keyspace is the outermost container for data in Cassandra, corresponding closely to a schema in a relational database. The keyspace can include operational elements, such as replication factor and data center awareness. Let's create a keyspace:
@@ -209,8 +210,23 @@ SELECT * from users;
 (2 rows)
 ```
 
+# UUID vs TimeUUID
+UUID and TIMEUUID are stored the same way in Cassandra, and they only really represent two different sorting implementations.
+
+TIMEUUID columns are sorted by their time components first, and then by their raw bytes, whereas UUID columns are sorted by their version first, then if both are version 1 by their time component, and finally by their raw bytes. Curiously the time component sorting implementations are duplicated between UUIDType and TimeUUIDType in the Cassandra code, except for different formatting.
+
+I think of the UUID vs. TIMEUUID question primarily as documentation: if you choose TIMEUUID you're saying that you're storing things in chronological order, and that these things can occur at the same time, so a simple timestamp isn't enough. Using UUID says that you don't care about order (even if in practice the columns will be ordered by time if you put version 1 UUIDs in them), you just want to make sure that things have unique IDs.
+
+Even if using NOW() to generate UUID values is convenient, it's also very surprising to other people reading your code.
+
+It probably does not matter much in the grand scheme of things, but sorting non-version 1 UUIDs is a bit faster than version 1, so if you have a UUID column and generate the UUIDs yourself, go for another version.
+
 # Used Sources
 - [Planet Cassandra - What is Cassandra?](http://planetcassandra.org/what-is-apache-cassandra/)
 - [Cassandra Keyspaces - what are they ?](http://gettingstartedwithcassandra.blogspot.nl/2011/06/cassandra-keyspaces-what-are-they.html)
 - [Dynamo -  Amazon’s Highly Available Key-value Store](http://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf)
 - [Bigtable - A Distributed Storage System for Structured Data](http://static.googleusercontent.com/media/research.google.com/nl//archive/bigtable-osdi06.pdf)
+- [Are there any performance penalties when using a TEXT as a Primary Key?](http://stackoverflow.com/questions/28191761/are-there-any-performance-penalties-when-using-a-text-as-a-primary-key/28194884#28194884)
+- [Select 2000 most recent log entries in cassandra table using CQL (Latest version)](http://stackoverflow.com/questions/18274007/select-2000-most-recent-log-entries-in-cassandra-table-using-cql-latest-version)
+- [Selecting timeuuid columns corresponding to a specific date](http://stackoverflow.com/questions/19104629/selecting-timeuuid-columns-corresponding-to-a-specific-date)
+- [Cassandra UUID vs TimeUUID benefits and disadvantages](http://stackoverflow.com/questions/17945677/cassandra-uuid-vs-timeuuid-benefits-and-disadvantages/17946236#17946236)

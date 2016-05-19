@@ -9,3 +9,5 @@ services:
       - "9042:9042"
     environment:
       - "CASSANDRA_CLUSTER_NAME=OUR_DOCKERIZED_CASSANDRA_SINGLE_NODE_CLUSTER"
+    volumes:
+      - "./cql:/cql"
