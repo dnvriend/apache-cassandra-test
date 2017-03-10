@@ -73,8 +73,6 @@ Attempting to create an already existing index will return an error unless the I
 - [Queries](http://cassandra.apache.org/doc/cql3/CQL.html#queries): to look up data.
   - [SELECT](http://cassandra.apache.org/doc/cql3/CQL.html#selectStmt): The SELECT statements reads one or more columns for one or more rows in a table. It returns a result-set of rows, where each row contains the collection of columns corresponding to the query.
 
-
-
 ## Data Types
 CQL supports a rich set of [data types](http://cassandra.apache.org/doc/cql3/CQL.html#types) for columns defined in a table, including [collection types](http://cassandra.apache.org/doc/cql3/CQL.html#collections). Cassandra supports a lot of data types, the following is a a short list:
 
@@ -226,7 +224,8 @@ Even if using NOW() to generate UUID values is convenient, it's also very surpri
 
 It probably does not matter much in the grand scheme of things, but sorting non-version 1 UUIDs is a bit faster than version 1, so if you have a UUID column and generate the UUIDs yourself, go for another version.
 
-# Used Sources
+## Used Sources
+- [Cassandra Courses](https://academy.datastax.com/courses)
 - [Planet Cassandra - What is Cassandra?](http://planetcassandra.org/what-is-apache-cassandra/)
 - [Cassandra Keyspaces - what are they ?](http://gettingstartedwithcassandra.blogspot.nl/2011/06/cassandra-keyspaces-what-are-they.html)
 - [Dynamo -  Amazon’s Highly Available Key-value Store](http://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf)
@@ -235,3 +234,7 @@ It probably does not matter much in the grand scheme of things, but sorting non-
 - [Select 2000 most recent log entries in cassandra table using CQL (Latest version)](http://stackoverflow.com/questions/18274007/select-2000-most-recent-log-entries-in-cassandra-table-using-cql-latest-version)
 - [Selecting timeuuid columns corresponding to a specific date](http://stackoverflow.com/questions/19104629/selecting-timeuuid-columns-corresponding-to-a-specific-date)
 - [Cassandra UUID vs TimeUUID benefits and disadvantages](http://stackoverflow.com/questions/17945677/cassandra-uuid-vs-timeuuid-benefits-and-disadvantages/17946236#17946236)
+
+## Videos
+- [(0'35 hr) Building a Fast, Resilient Time Series Store with Cassandra - Alex Petrov](https://www.youtube.com/watch?v=3pPser3MYEE)
+- [(0'34 hr) C* Keys: Partitioning, Clustering, & CrossFit - Adam Hutson](https://www.youtube.com/watch?v=L0XqRF8C6D0)

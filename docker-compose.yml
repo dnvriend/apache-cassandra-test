@@ -2,7 +2,7 @@ version: '2'
 
 services:
   cassandra:
-    image: cassandra:2
+    image: cassandra:latest
     container_name: cassandra
     ports:
       - "7000:7000"

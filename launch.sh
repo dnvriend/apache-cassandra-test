@@ -1,8 +1,6 @@
 #!/bin/bash
-export VM_HOST=boot2docker
+export VM_HOST=localhost
 
-# Wait for a certain service to become available
-# Usage: wait 3306 Mysql
 wait() {
 while true; do
   if ! nc -z $VM_HOST $1
