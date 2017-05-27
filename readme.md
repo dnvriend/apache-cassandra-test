@@ -10,6 +10,9 @@ Using the `nodetool.sh` script, you get access to nodetool. The nodetool utility
 ## cqlsh
 Using the `cqlsh.sh` script, you get access to cqlsh, which you can use to create keyspaces and tables, insert and query tables, plus much more.
 
+## Introduction to processing data
+There are multiple ways to process data. Lets start simple and then ramp it up.
+
 # What is Cassandra?
 [Apache Cassandra](http://cassandra.apache.org/), is born at Facebook and built on [Amazon’s Dynamo and Google’s BigTable](http://docs.datastax.com/en/articles/cassandra/cassandrathenandnow.html), is a distributed database for managing large amounts of structured data across many commodity servers, while providing highly available service and no single point of failure. Cassandra offers capabilities that relational databases and other NoSQL databases simply cannot match such as: continuous availability, linear scale performance, operational simplicity and easy data distribution across multiple data centers and cloud availability zones.
 
@@ -97,30 +100,44 @@ time | integers, strings | A time with nanosecond precision.
 date | integers, strings | A date (with no corresponding time value)
 
 ## Keyspaces
-A cluster is a container for keyspaces. A keyspace is the outermost container for data in Cassandra, corresponding closely to a schema in a relational database. The keyspace can include operational elements, such as replication factor and data center awareness. Let's create a keyspace:
+A 'cluster' is a container for 'keyspaces'. A 'keyspace' is a container for 'tables'. Keyspaces correspond closely to a database schema in a relational database. The keyspace can include operational elements, such as replication factor and data center awareness. Let's create a keyspace:
 
-```
+Note: the 'replication_factor' parameter is required.
+
+```cql
 -- create a keyspace 'my_keyspace'
-create keyspace my_keyspace with replication={'class':'SimpleStrategy', 'replication_factor':1};
+CREATE KEYSPACE my_keyspace 
+with REPLICATION = {
+ 'class' : 'SimpleStrategy', 
+ 'replication_factor' : 1
+};
 
--- use the keyspace
-use my_keyspace;
+-- switch to the keyspace with the 'USE' keyword
+USE my_keyspace;
 
--- drop the keyspace
-drop keyspace my_keyspace;
+-- drop the keyspace with the 'DROP' keyword
+DROP keyspace my_keyspace;
 ```
 
 ## Creating a table
-To create a table type the following in cqlsh, note that you must first create a keyspace and then use that keyspace:
+To create a table you must first create a keyspace and then use that keyspace. To create a table the structure looks a lot like a SQL-DDL CREATE command. Every row in a table must be uniquely identifiable, we do that with a primary key. 
 
-```
+Cassandra offers several data types like:
+
+- UUID (Universally Unique Identifier, generate via 'uuid()'), 
+- TIMEUUID (Embeds a timestamp value, is sortable, generate via 'now()'),
+- TEXT (utf-8 encoded, any length), 
+- INT (signed, 32 bit)
+- TIMESTAMP (Stores date and time, 64 bit integer, millis since epoch)
+
+Note: Generally in Cassandra we use UUID or TIMEUUID as an identifier.
+
+```cql
 CREATE TABLE users (
- firstname text, 
- lastname text, 
- age int, 
- email text, 
- city text, 
- PRIMARY KEY (lastname)
+ user UUID,
+ email TEXT, 
+ name INT, 
+ PRIMARY KEY (user)
 );
 ```
 
@@ -131,33 +148,38 @@ To see detail information about a table type:
 DESCRIBE TABLE users;
 ```
 
-## Insert records
-To insert records in the table type:
+## COPY (Bulk loading data)
+The copy command allows for bulk loading data into cassandra from a CSV file:
 
-```
-INSERT INTO users (firstname, lastname, age, email, city) VALUES ('John', 'Smith', 46, 'johnsmith@email.com', 'Sacramento'); 
-INSERT INTO users (firstname, lastname, age, email, city) VALUES ('Jane', 'Doe', 36, 'janedoe@email.com', 'Beverly Hills'); 
-INSERT INTO users (firstname, lastname, age, email, city) VALUES ('Rob', 'Byrne', 24, 'robbyrne@email.com', 'San Diego');
+```cql
+COPY table_name (column1, column2, column3) FROM 'table1data.csv';
+
+-- to skip the header
+COPY table_name (column1, column2, column3) FROM 'table1data.csv'
+WITH HEADER = true;
 ```
 
 ## Querying a table
 To query a table type the following:
 
-```
-SELECT * FROM users;
+```cql
+SELECT * 
+ FROM table1;
 
- lastname | age | city          | email               | firstname
-----------+-----+---------------+---------------------+-----------
-      Doe |  36 | Beverly Hills |   janedoe@email.com |      Jane
-    Byrne |  24 |     San Diego |  robbyrne@email.com |       Rob
-    Smith |  46 |    Sacramento | johnsmith@email.com |      John
+SELECT column1, column2, column3
+ FROM table1;
 
-(3 rows)
+SELECT COUNT(*)
+ FROM table1;
+
+SELECT *
+ FROM table1
+ LIMIT 10;
 ```
 
 We can filter the result by using a predicate:
 
-```
+```cql
 SELECT * FROM users WHERE lastname= 'Doe';
 
  lastname | age | city          | email             | firstname
@@ -213,16 +235,48 @@ SELECT * from users;
 (2 rows)
 ```
 
-# UUID vs TimeUUID
-UUID and TIMEUUID are stored the same way in Cassandra, and they only really represent two different sorting implementations.
+## UUID (Universally Unique Identifiers)
+[UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier) uses 32 hex digits, 0-9 or a-f, which are case-insensitive, separated by dashes, -, after the 8th, 12th, 16th, and 20th digits. For example: 01234567-0123-0123-0123-0123456789ab. A UUID should be 128 bits or 16 bytes long.
+
+When generated according to the standard methods, UUIDs are for practical purposes unique, without depending for their uniqueness on a central registration authority or coordination between the parties generating them, unlike most other numbering schemes. While the probability that a UUID will be duplicated is not zero, it is so close to zero as to be negligible.
+
+Thus, anyone can create a UUID and use it to identify something with near certainty that the identifier does not duplicate one that has already been, or will be, created to identify something else. Information labeled with UUIDs by independent parties can therefore be later combined into a single database, or transmitted on the same channel, without needing to resolve conflicts between identifiers.
+
+Adoption of UUIDs and GUIDs is widespread, with many computing platforms providing support for generating them, and for parsing their textual representation.
+
+## TIMEUUID
+[TIMEUUID](https://docs.datastax.com/en/cql/3.3/cql/cql_reference/valid_literal_r.html) uses the time in 100 nanosecond intervals since 00:00:00.00 UTC (60 bits), a clock sequence number for prevention of duplicates (14 bits), plus the IEEE 801 MAC address (48 bits) to generate a unique identifier. For example: d2177dd0-eaa2-11de-a572-001b779c76e3 which makes 60 bits, 14 bits and 48 bits 
+
+# UUID vs TIMEUUID
+[UUID and TIMEUUID](https://docs.datastax.com/en/cql/3.3/cql/cql_reference/uuid_type_r.html?hl=uuid) are stored the same way in Cassandra, and they only really represent two different sorting implementations.
 
 TIMEUUID columns are sorted by their time components first, and then by their raw bytes, whereas UUID columns are sorted by their version first, then if both are version 1 by their time component, and finally by their raw bytes. Curiously the time component sorting implementations are duplicated between UUIDType and TimeUUIDType in the Cassandra code, except for different formatting.
 
-I think of the UUID vs. TIMEUUID question primarily as documentation: if you choose TIMEUUID you're saying that you're storing things in chronological order, and that these things can occur at the same time, so a simple timestamp isn't enough. Using UUID says that you don't care about order (even if in practice the columns will be ordered by time if you put version 1 UUIDs in them), you just want to make sure that things have unique IDs.
+I think of the UUID vs. TIMEUUID question primarily as documentation: if you choose TIMEUUID you're saying that you're storing things in chronological order, and that these things can occur at the same time, so a simple timestamp isn't enough. TIMEUUIDs are used for time-series data. As we are recording records we want to maintain the order of the time that they were inserted thus no timestamp column is necessary. If we sort by a TIMEUUID the data will be sorted by a time seried fashion.  
+
+Using UUID says that you don't care about order (even if in practice the columns will be ordered by time if you put version 1 UUIDs in them), you just want to make sure that things have unique IDs.
 
 Even if using NOW() to generate UUID values is convenient, it's also very surprising to other people reading your code.
 
 It probably does not matter much in the grand scheme of things, but sorting non-version 1 UUIDs is a bit faster than version 1, so if you have a UUID column and generate the UUIDs yourself, go for another version.
+
+The UUID (universally unique id) comparator type is used to avoid collisions in column names. Alternatively, you can use the TIMEUUID.
+
+TIMEUUID types can be entered as integers for CQL input. A value of the TIMEUUID type is a Type 1 UUID. A Version 1 UUID includes the time of its generation and are sorted by timestamp, making them ideal for use in applications requiring 'conflict-free timestamps'. For example, you can use this type to identify a column (such as a blog entry) by its timestamp and allow multiple clients to write to the same partition key simultaneously. Collisions that would potentially overwrite data that was not intended to be overwritten cannot occur.
+
+A valid timeuuid conforms to the timeuuid format shown in [valid literals](https://docs.datastax.com/en/cql/3.3/cql/cql_reference/valid_literal_r.html).
+
+## Telling the difference between a UUID and TIMEUUD
+When you visually see a UUID or TimeUUID representation you must look for the third set of numbers. For example:
+
+```
+- UUID    : '7ae6918b-5bcf-40f1-8068-2ed179a5f9eb' 
+- TIMEUUID: 'd2177dd0-eaa2-11de-a572-001b779c76e3'
+```
+
+The third set of number for the UUID example is '40f1' which starts with a '4' which means 'Version 4' and is the version identifier of the UUID String. The third set of numbers for the TIMEUUID example is '11de' which starts with '1' which means 'Version 1' and identifies a TIMEUUID. 
+
+So both UUID and TIMEUUID are valid 128 bit UUID identifiers, but now you can visually inspect the version by looking at the third set of numbers and identify which UUID version it is, either '1 - TimeUUID' or '4 - UUID'.
 
 ## Used Sources
 - [Cassandra Courses](https://academy.datastax.com/courses)
@@ -234,6 +288,11 @@ It probably does not matter much in the grand scheme of things, but sorting non-
 - [Select 2000 most recent log entries in cassandra table using CQL (Latest version)](http://stackoverflow.com/questions/18274007/select-2000-most-recent-log-entries-in-cassandra-table-using-cql-latest-version)
 - [Selecting timeuuid columns corresponding to a specific date](http://stackoverflow.com/questions/19104629/selecting-timeuuid-columns-corresponding-to-a-specific-date)
 - [Cassandra UUID vs TimeUUID benefits and disadvantages](http://stackoverflow.com/questions/17945677/cassandra-uuid-vs-timeuuid-benefits-and-disadvantages/17946236#17946236)
+
+## Courses
+- [(0'30 hr) Introduction - DataStax](https://academy.datastax.com/resources/ds101-introduction-cassandra)
+- [(6'00 hr) Core Concepts - DataStax](https://academy.datastax.com/resources/ds201-foundations-apache-cassandra)
+- [(12'00 hr) Data Modeling - DataStax](https://academy.datastax.com/resources/ds220-data-modeling)
 
 ## Videos
 - [(0'35 hr) Building a Fast, Resilient Time Series Store with Cassandra - Alex Petrov](https://www.youtube.com/watch?v=3pPser3MYEE)
